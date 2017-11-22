@@ -17,6 +17,9 @@ logger.setLevel(logging.INFO)
 
 URL = 'https://opensky-network.org/api/states/all'
 PATHNAME = 'opensky'
+# going to save to ndjson
+# API returns awkward json blob
+SUFFIX = '.ndjson'
 
 
 def parse_args():
@@ -37,7 +40,7 @@ def get_bucket_path(dest, now):
                         now.strftime('%m'),
                         now.strftime('%d'),
                         PATHNAME + '-' + now.strftime('%Y%m%d%H%M%S') +
-                        '.json')
+                        SUFFIX)
     if path[0] == '/':
         path = path[1:]
 
@@ -49,13 +52,17 @@ def main():
     bucket_name, path_name = get_bucket_path(args.dest,
                                              datetime.datetime.now().utcnow())
     logger.info("Saving to %s, %s" % (bucket_name, path_name))
+
+    # Fetch data from API and convert states into lines of text
     resp = requests.get(URL)
     data = resp.json()
+    states = data['states']
+    lines = '\n'.join([json.dumps(s) for s in states])
 
     client = storage.Client(args.project_id)
     bucket = client.get_bucket(bucket_name)
     blob = bucket.blob(path_name)
-    blob.upload_from_string(json.dumps(data))
+    blob.upload_from_string(json.dumps(lines))
 
 
 if __name__ == "__main__":
