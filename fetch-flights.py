@@ -62,7 +62,7 @@ def main():
     client = storage.Client(args.project_id)
     bucket = client.get_bucket(bucket_name)
     blob = bucket.blob(path_name)
-    blob.upload_from_string(json.dumps(lines))
+    blob.upload_from_string(lines)
 
 
 if __name__ == "__main__":
